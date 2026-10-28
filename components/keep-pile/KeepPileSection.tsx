@@ -4,7 +4,6 @@ import { useReeltrace } from "@/lib/context/reeltrace-context";
 
 export default function KeepPileSection() {
   const {
-    savedCount,
     getSavedFilms,
     toggleSave,
     clearWatchlist,
@@ -52,11 +51,11 @@ export default function KeepPileSection() {
             <div className="saved-list">
               {films.map((f) => (
                 <article key={f.id} className="saved-item">
-                  <div className="saved-swatch">{f.year}</div>
+                  <div className="saved-swatch">{f.year || "★"}</div>
                   <div>
                     <h4>{f.title}</h4>
                     <p>
-                      {f.genres[0]?.toUpperCase() || "FILM"} / {f.tag}
+                      {f.genres[0]?.toUpperCase() || "FILM"} / {f.tag || "SAVED"}
                     </p>
                   </div>
                   <button

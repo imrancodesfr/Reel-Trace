@@ -18,7 +18,7 @@ export default function ResultCard({
   const detail =
     mode === "scene"
       ? `${match.moment || "Scene"} · ${match.timecodeDisplay || "—"}`
-      : match.snippet || "";
+      : match.snippet || match.film.overview?.substring(0, 100) || "";
 
   const matchLabel =
     match.matchType === "exact"
@@ -27,18 +27,24 @@ export default function ResultCard({
         ? "CLOSE MATCH"
         : "RELATED";
 
+  const poster =
+    match.film.posterUrl ||
+    "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80";
+
   return (
     <article className="result-card">
       <div
         className="result-art"
         style={{
-          background: `linear-gradient(180deg, transparent 45%, #0008), url('${match.film.posterUrl}') center/cover`,
+          backgroundImage: `linear-gradient(180deg, transparent 45%, #0008), url('${poster}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           backgroundColor: "#888",
         }}
       />
       <div className="result-copy">
         <div className="mono">
-          {match.tag || ""} / {match.film.year || "—"}
+          {match.tag || match.film.genres[0]?.toUpperCase() || "CINEMA"} / {match.film.year || "—"}
         </div>
         <h4>{match.film.title}</h4>
         <p>{detail}</p>

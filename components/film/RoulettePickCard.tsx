@@ -1,9 +1,16 @@
 "use client";
 
-import { DemoFilm } from "@/lib/domain/demo-data";
+import { Film } from "@/lib/domain/types";
+
+export interface RouletteFilmData extends Film {
+  art?: string;
+  snippet?: string;
+  moment?: string;
+  tag?: string;
+}
 
 interface RoulettePickCardProps {
-  film: DemoFilm;
+  film: RouletteFilmData;
   isSaved: boolean;
   onSave: () => void;
   onWatched: () => void;
@@ -17,6 +24,11 @@ export default function RoulettePickCard({
   onWatched,
   onNext,
 }: RoulettePickCardProps) {
+  const imageUrl =
+    film.posterUrl ||
+    film.art ||
+    "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=700&q=80";
+
   return (
     <article
       className="result-card"
@@ -31,7 +43,9 @@ export default function RoulettePickCard({
         className="result-art"
         style={{
           minHeight: "220px",
-          background: `linear-gradient(180deg, transparent 45%, #0008), url('${film.art}') center/cover`,
+          backgroundImage: `linear-gradient(180deg, transparent 45%, #0008), url('${imageUrl}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           backgroundColor: "#888",
         }}
       />
@@ -46,19 +60,25 @@ export default function RoulettePickCard({
           }}
         >
           {film.title}{" "}
-          <span
-            style={{
-              font: "13px var(--mono)",
-              color: "var(--muted)",
-            }}
-          >
-            ({film.year})
-          </span>
+          {film.year && (
+            <span
+              style={{
+                font: "13px var(--mono)",
+                color: "var(--muted)",
+              }}
+            >
+              ({film.year})
+            </span>
+          )}
         </h4>
-        <p style={{ maxWidth: "390px", fontSize: "13px" }}>
-          {film.moment}.{" "}
-          <span style={{ color: "#6d6c63" }}>{film.tag}.</span>
+        <p style={{ maxWidth: "420px", fontSize: "13px", lineHeight: "1.5" }}>
+          {film.snippet || film.overview || "A cinematic memory waiting to be uncovered."}
         </p>
+        {film.moment && (
+          <p style={{ maxWidth: "420px", fontSize: "11px", color: "var(--muted)" }}>
+            Key moment: {film.moment}
+          </p>
+        )}
         <p style={{ maxWidth: "390px" }}>
           Your mission: give it a chance. If it&apos;s not the one, send it
           back to the shelf and roll again.

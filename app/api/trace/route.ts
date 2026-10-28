@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchTrace } from "@/lib/search/engine";
+import { searchTraceWithTmdb } from "@/lib/search/engine";
+import { quotesDatabase } from "@/lib/domain/quotes-database";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -13,12 +14,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const matches = searchTrace(q, limit);
-  return NextResponse.json({
-    query: q,
-    count: matches.length,
-    matches,
-    source: "DEMO_INDEX",
-    notice: "Sample results only. Timestamps are illustrative.",
-  });
+  try {
+    const matches = await searchTraceWithTmdb(quotesDatabase, q, limit);
+    return NextResponse.json({
+      query: q,
+      count: matches.length,
+      matches,
+      source: "REELTRACE_INDEX",
+    });
+  } catch (error) {
+    console.error("Trace search error:", error);
+    return NextResponse.json(
+      { error: "Search failed", matches: [] },
+      { status: 500 }
+    );
+  }
 }

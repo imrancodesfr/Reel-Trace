@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchScenes } from "@/lib/search/engine";
+import { searchScenesWithTmdb } from "@/lib/search/engine";
+import { quotesDatabase } from "@/lib/domain/quotes-database";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -14,13 +15,21 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const matches = searchScenes(q, movie, limit);
-  return NextResponse.json({
-    query: q,
-    movie: movie || null,
-    count: matches.length,
-    matches,
-    source: "DEMO_INDEX",
-    notice: "Sample scene coordinates only. Timestamps are illustrative.",
-  });
+  try {
+    const matches = await searchScenesWithTmdb(quotesDatabase, q, movie, limit);
+    return NextResponse.json({
+      query: q,
+      movie: movie || null,
+      count: matches.length,
+      matches,
+      source: "REELTRACE_INDEX",
+      notice: "Scene coordinates identified via dialogue index and metadata.",
+    });
+  } catch (error) {
+    console.error("Scene search error:", error);
+    return NextResponse.json(
+      { error: "Scene search failed", matches: [] },
+      { status: 500 }
+    );
+  }
 }

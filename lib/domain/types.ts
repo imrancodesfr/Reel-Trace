@@ -37,8 +37,18 @@ export type TraceMatch = {
   moment?: string;
 };
 
+export type SavedFilmItem = {
+  id: string;
+  title: string;
+  year?: number;
+  genres: string[];
+  posterUrl?: string;
+  tag?: string;
+};
+
 export type UserFilmState = {
   watchlistIds: string[];
   watchedIds: string[];
   skippedIds: string[];
+  savedFilmsMap?: Record<string, SavedFilmItem>;
 };

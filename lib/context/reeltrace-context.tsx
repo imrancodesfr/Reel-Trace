@@ -14,20 +14,20 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { UserFilmState } from "@/lib/domain/types";
+import { UserFilmState, Film, SavedFilmItem } from "@/lib/domain/types";
 import { loadFilmState, saveFilmState } from "@/lib/storage/local-storage";
-import { demoFilms, DemoFilm } from "@/lib/domain/demo-data";
+import { demoFilms } from "@/lib/domain/demo-data";
 
 interface ReeltraceContextValue {
   state: UserFilmState;
   savedCount: number;
   isSaved: (id: string) => boolean;
   isWatched: (id: string) => boolean;
-  toggleSave: (id: string) => void;
+  toggleSave: (id: string, filmData?: Film) => void;
   markWatched: (id: string) => void;
   clearWatchlist: () => void;
   clearWatched: () => void;
-  getSavedFilms: () => DemoFilm[];
+  getSavedFilms: () => SavedFilmItem[];
   toast: (message: string) => void;
   toastMessage: string | null;
   exportKeepPile: () => void;
@@ -47,6 +47,7 @@ export function ReeltraceProvider({ children }: { children: ReactNode }) {
     watchlistIds: [],
     watchedIds: [],
     skippedIds: [],
+    savedFilmsMap: {},
   });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -80,17 +81,45 @@ export function ReeltraceProvider({ children }: { children: ReactNode }) {
   );
 
   const toggleSave = useCallback(
-    (id: string) => {
+    (id: string, filmData?: Film) => {
       setState((prev) => {
         const alreadySaved = prev.watchlistIds.includes(id);
-        const next = {
+        const newWatchlist = alreadySaved
+          ? prev.watchlistIds.filter((x) => x !== id)
+          : [...prev.watchlistIds, id];
+
+        const updatedMap = { ...(prev.savedFilmsMap || {}) };
+
+        if (!alreadySaved && filmData) {
+          updatedMap[id] = {
+            id: filmData.id,
+            title: filmData.title,
+            year: filmData.year,
+            genres: filmData.genres || [],
+            posterUrl: filmData.posterUrl,
+            tag: filmData.genres?.[0]?.toUpperCase() || "SAVED",
+          };
+        } else if (!alreadySaved && !updatedMap[id]) {
+          const fallback = demoFilms.find((f) => f.id === id);
+          if (fallback) {
+            updatedMap[id] = {
+              id: fallback.id,
+              title: fallback.title,
+              year: fallback.year,
+              genres: fallback.genres,
+              posterUrl: fallback.art,
+              tag: fallback.tag,
+            };
+          }
+        }
+
+        return {
           ...prev,
-          watchlistIds: alreadySaved
-            ? prev.watchlistIds.filter((x) => x !== id)
-            : [...prev.watchlistIds, id],
+          watchlistIds: newWatchlist,
+          savedFilmsMap: updatedMap,
         };
-        return next;
       });
+
       toast(
         state.watchlistIds.includes(id)
           ? "Removed from your keep pile."
@@ -107,7 +136,6 @@ export function ReeltraceProvider({ children }: { children: ReactNode }) {
         watchedIds: prev.watchedIds.includes(id)
           ? prev.watchedIds
           : [...prev.watchedIds, id],
-        // Remove from watchlist when marked watched
         watchlistIds: prev.watchlistIds.filter((x) => x !== id),
       }));
       toast("Marked as watched.");
@@ -129,11 +157,31 @@ export function ReeltraceProvider({ children }: { children: ReactNode }) {
     toast("Watched list reset.");
   }, [toast]);
 
-  const getSavedFilms = useCallback((): DemoFilm[] => {
+  const getSavedFilms = useCallback((): SavedFilmItem[] => {
+    const map = state.savedFilmsMap || {};
     return state.watchlistIds
-      .map((id) => demoFilms.find((f) => f.id === id))
-      .filter((f): f is DemoFilm => !!f);
-  }, [state.watchlistIds]);
+      .map((id) => {
+        if (map[id]) return map[id];
+        const demo = demoFilms.find((f) => f.id === id);
+        if (demo) {
+          return {
+            id: demo.id,
+            title: demo.title,
+            year: demo.year,
+            genres: demo.genres,
+            posterUrl: demo.art,
+            tag: demo.tag,
+          };
+        }
+        return {
+          id,
+          title: id.replace(/^tmdb-/, "").replace(/-/g, " "),
+          genres: ["FILM"],
+          tag: "SAVED",
+        };
+      })
+      .filter((f): f is SavedFilmItem => !!f);
+  }, [state.watchlistIds, state.savedFilmsMap]);
 
   const exportKeepPile = useCallback(() => {
     const films = getSavedFilms();
@@ -142,7 +190,7 @@ export function ReeltraceProvider({ children }: { children: ReactNode }) {
       return;
     }
     const text = films
-      .map((f) => `${f.title} (${f.year}) — ${f.genres.join(", ")}`)
+      .map((f) => `${f.title} (${f.year || "—"}) — ${f.genres.join(", ")}`)
       .join("\n");
     const blob = new Blob([`REELTRACE — MY KEEP PILE\n\n${text}\n`], {
       type: "text/plain",
