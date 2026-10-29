@@ -57,6 +57,12 @@ export default function RoulettePickCard({
           style={{
             fontSize: "clamp(24px, 4vw, 42px)",
             margin: "12px 0",
+            background: "#d8f36a",
+            color: "#191a17",
+            display: "inline",
+            padding: "2px 8px",
+            boxDecorationBreak: "clone",
+            WebkitBoxDecorationBreak: "clone",
           }}
         >
           {film.title}{" "}
@@ -71,11 +77,11 @@ export default function RoulettePickCard({
             </span>
           )}
         </h4>
-        <p style={{ maxWidth: "420px", fontSize: "13px", lineHeight: "1.5" }}>
+        <p style={{ maxWidth: "420px", fontSize: "14px", lineHeight: "1.5" }}>
           {film.snippet || film.overview || "A cinematic memory waiting to be uncovered."}
         </p>
         {film.moment && (
-          <p style={{ maxWidth: "420px", fontSize: "11px", color: "var(--muted)" }}>
+          <p style={{ maxWidth: "420px", fontSize: "12px", color: "var(--muted)" }}>
             Key moment: {film.moment}
           </p>
         )}

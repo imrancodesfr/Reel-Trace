@@ -529,7 +529,7 @@ export default function FinderSection() {
                   padding: "36px 0",
                   textAlign: "center",
                   fontFamily: "var(--mono)",
-                  fontSize: "12px",
+                  fontSize: "13px",
                   letterSpacing: ".1em",
                   color: "var(--muted)",
                 }}
